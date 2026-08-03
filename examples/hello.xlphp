@@ -1,0 +1,9 @@
+print "Hello, XLphp World!"
+
+name = "John"
+when name == "John" {
+    print "Welcome, {name}!"
+}
+
+func add(a, b) => a + b
+print "2 + 3 = {add(2, 3)}"
