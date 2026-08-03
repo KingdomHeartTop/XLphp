@@ -1,0 +1,101 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use XLphp\Compiler;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+
+$app = new Application('XLphp', '1.0.0');
+
+$app->register('run')
+    ->setDescription('Run XLphp script')
+    ->addArgument('file', InputArgument::REQUIRED, 'XLphp file to execute')
+    ->addArgument('args', InputArgument::IS_ARRAY, 'Script arguments')
+    ->addOption('dump', 'd', InputOption::VALUE_NONE, 'Dump compiled PHP code')
+    ->setCode(function (InputInterface $input, OutputInterface $output) {
+        $file = $input->getArgument('file');
+        $dump = $input->getOption('dump');
+
+        if (!file_exists($file)) {
+            $output->writeln("<error>File not found: {$file}</error>");
+            return 1;
+        }
+
+        $compiler = new Compiler();
+
+        try {
+            $phpCode = $compiler->compileFile($file);
+
+            if ($dump) {
+                $output->writeln("<info>Compiled PHP code:</info>");
+                $output->writeln($phpCode);
+                return 0;
+            }
+
+            eval('?>' . $phpCode);
+            return 0;
+        } catch (Throwable $e) {
+            $output->writeln("<error>Error: " . $e->getMessage() . "</error>");
+            $output->writeln("<comment>In file: {$file} at line " . $e->getLine() . "</comment>");
+            return 1;
+        }
+    });
+
+$app->register('install')
+    ->setDescription('Install XLphp globally')
+    ->setCode(function (InputInterface $input, OutputInterface $output) {
+        $binPath = __DIR__ . '/xlphp';
+        $installPath = '/usr/local/bin/xlphp';
+
+        if (!is_writable(dirname($installPath))) {
+            $output->writeln("<error>Permission denied. Try with sudo.</error>");
+            return 1;
+        }
+
+        copy($binPath, $installPath);
+        chmod($installPath, 0755);
+
+        $output->writeln("<info>✓ XLphp installed successfully to {$installPath}</info>");
+        $output->writeln("<comment>Run: xlphp your_script.xlphp</comment>");
+        return 0;
+    });
+
+$app->register('init')
+    ->setDescription('Initialize new XLphp project')
+    ->setCode(function (InputInterface $input, OutputInterface $output) {
+        if (!is_dir('src')) {
+            mkdir('src', 0755, true);
+        }
+
+        if (!is_dir('examples')) {
+            mkdir('examples', 0755, true);
+        }
+
+        $mainFile = 'main.xlphp';
+        if (!file_exists($mainFile)) {
+            file_put_contents($mainFile, "print 'Hello, XLphp!'\n");
+        }
+
+        $output->writeln("<info>✓ XLphp project initialized!</info>");
+        $output->writeln("<comment>Run: xlphp main.xlphp</comment>");
+        return 0;
+    });
+
+$app->register('version')
+    ->setDescription('Show version')
+    ->setCode(function (InputInterface $input, OutputInterface $output) {
+        $output->writeln("XLphp version 1.0.0");
+        $output->writeln("PHP version " . PHP_VERSION);
+        return 0;
+    });
+
+$app->setDefaultCommand('run');
+$app->run();
