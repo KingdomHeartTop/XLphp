@@ -1,6 +1,6 @@
 # XLphp - Short & Powerful PHP-Based Language
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/yourusername/xlphp)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/KingdomHeart)
 [![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4)](https://php.net)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
